@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.0/simplepeer.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .video-container{
+            position: relative;
+            width: 100%;
+            padding-top: 50%; /* 16:8 aspect ratio (height/width * 100) */
+            overflow: hidden;
+        }
+        .video-container video{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width :100%;
+            height: 100%;
+        }
+
+        /* Header Section */
+        .chat-header {
+            padding: 5px;
+            background-color: #800080;
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Messages Section */
+        .messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 500px;
+            background-color: #e5ddd5;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 8px;
+            background-color: #ddd;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background-color: #aaa;
+            border-radius: 4px;
+        }
+
+        /* Message Bubbles */
+        .message-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .message-container.me {
+            justify-content: flex-end;
+        }
+
+        .message-container.other {
+            justify-content: flex-start;
+        }
+
+        /* Avatar */
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #ccc;
+            flex-shrink: 0;
+        }
+
+        /* Message Bubble */
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .message-container.me .message-bubble {
+            background-color: #D8BFD8;
+            color: black;
+            text-align: left;
+        }
+
+        .message-container.other .message-bubble {
+            background-color: white;
+            color: #000;
+            text-align: left;
+        }
+        .username {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #7b7d7d;
+        }
+        .status{
+            font-size: 0.9rem;
+            font-style: Italic;
+            }
+        .unread-badge{
+            font-size: 0.9rem;
+            font-style: Italic;
+            font-color: #EE4B2B;
+            }
+        .message-timestamp {
+            font-size: 0.75rem;
+            color: gray;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .chat-input {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+            gap: 5px;
+        }
+        .chat-input textarea {
+            flex: 1;
+            resize: none;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 5px 5px;
+            font-size: 1rem;
+            height: 30px;
+            outline: none;
+            background-color: #f9f9f9;
+        }
+        .chat-input button {
+            background-color: #075E54;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 5px 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .chat-input button:hover {
+            background-color: #004d36;
+        }
+        .input-container {
+            display: flex;
+            padding: 10px;
+            background-color: purple;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        #message-input {
+            width: 85%;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-right: 10px;
+        }
+        #send-btn {
+            width: 50px;
+            height: 50px;
+            background-color: #E0B0FF;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #send-btn:hover {
+            background-color: #D8BFD8;
+        }
+        #send-btn img {
+            width: 30px;
+            height: 30px;
+        }
+        #shareBtn{
+            width: 50px;
+            height: 50px;
+            background-color: #E0B0FF;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #shareBtn:hover {
+            background-color: #D8BFD8;
+        }
+        #shareBtn img {
+            width: 25px;
+            height: 25px;
+        }
+        #avatar-pic {
+            width: 50px;
+            height: 50px;
+            background-color:#E6E6FA;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #avatar-pic:hover {
+            background-color: #D8BFD8;
+        }
+        #avatar-pic img {
+            width: 25px;
+            height: 25px;
+        }
+        .options {
+            display: none;
+            position: absolute;
+            background: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background: #fff;
+            cursor: pointer;
+        }
+        .options button:hover {
+            background: #f0f0f0;
+        }
+        .user-status {
+            font-size: 20px;
+            margin-left: 5px;
+        }
+        .online{
+            color: #7FFF00;
+            }
+        .offline{
+            color: red;
+            }
+        .online::after {
+           font-family: Times, "Times New Roman", Georgia, serif;
+           color: #8FBC8B;
+           content: "   Online";
+        }
+        .offline::after {
+            font-family: Times, "Times New Roman", Georgia, serif;
+            color: gray;
+            content: "  Offline";
+        }
+
+    </style>
+          <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="chat-container">
+        <div class="chat-header">
+            <h3 style="font-family: Georgia, serif; text-align: left; padding: 5px; margin: 5px;">
+            {{ recipient.username }}
+            <span id="user-status-{{ user.id }}" class="user-status offline">●</span>
+        </h3>
+        </div>
+        <div class="messages" id="chat-messages">
+            {% for message in messages %}
+                <div class="message-container {% if message.sender.username == user.username %}me{% else %}other{% endif %}">
+                    {% if message.sender.username != user.username %}
+                        <div class="avatar" id="avatar-pic"><img src="https://img.icons8.com/?size=100&id=nSR7D8Yb2tjC&format=png&color=000000" alt="AV"></div>
+                    {% endif %}
+                    <div class="message-bubble">
+                        <div class="username">{{ message.sender.username }}</div>
+                        <div class="message-content">{{ message.content }}</div>
+                        <div class="message-timestamp">{{ message.timestamp|date:"H:i" }}</div>
+                    </div>
+                    <div class="options" id="options-{{ message.id }}">
+                        <button onclick="copyMessage('{{ message.content }}')"><img src="https://img.icons8.com/?size=100&id=86216&format=png&color=000000" alt="Copy"></button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-btn">
+                <img src="https://img.icons8.com/?size=100&id=2837&format=png&color=000000" alt="send">
+            </button>
+            <button id="shareBtn">
+                <img src="https://img.icons8.com/?size=100&id=IId2iYTrumrQ&format=png&color=000000" alt="share">
+            </button>
+        </div>
+    </div>
+</div>
+<div class="video-container">
+    <div class="screen-share-container">
+        <video id="localVideo" autoplay></video>
+        <video id="remoteVideo" autoplay></video>
+    </div>
+</div>
+    <script>
+    var notificationSocket = new WebSocket(
+        (window.location.protocol === "https:" ? "wss://" : "ws://") +
+        window.location.host + "/ws/notifications/"
+    );
+    notificationSocket.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        var unreadCount = data.unread_count;
+    };
+     notificationSocket.onclose = function(e) {
+        console.error("WebSocket closed.");
+    };
+    var onlineSocket = new WebSocket("ws://" + window.location.host + "/ws/online/");
+    onlineSocket.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        if (data.type === "update_online_users") {
+            updateOnlineUserList(data.online_users);
+        }
+    };
+
+    function updateOnlineUserList(onlineUsers) {
+        document.querySelectorAll(".user-status").forEach((element) => {
+            element.classList.remove("online");
+            element.classList.add("offline");
+        });
+
+        onlineUsers.forEach((user) => {
+            let userElement = document.getElementById("user-status-" + user.user__id);
+            if (userElement) {
+                userElement.classList.remove("offline");
+                userElement.classList.add("online");
+            }
+        });
+    }
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const shareBtn = document.getElementById('shareBtn');
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const shareSocket = new WebSocket(wsScheme + '://' + window.location.host + '/ws/screenshare/');
+    let localStream, peerConnection;
+    const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    shareSocket.onopen = () => console.log('✅ WebSocket connection opened');
+    shareSocket.onerror = error => console.error('❌ WebSocket error:', error);
+    shareSocket.onclose = () => console.log('⚠️ WebSocket connection closed');
+
+    shareBtn.onclick = async () => {
+        try {
+            console.log('🎥 Requesting display media...');
+            localStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            console.log('✅ Display media obtained:', localStream);
+            localVideo.srcObject = localStream;
+
+            peerConnection = new RTCPeerConnection(config);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    console.log('📡 Sending ICE candidate:', event.candidate);
+                    shareSocket.send(JSON.stringify({ 'candidate': event.candidate }));
+                }
+            };
+
+            peerConnection.ontrack = event => {
+                console.log('🎬 Received remote stream:', event.streams[0]);
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.onloadedmetadata = () => {
+                    remoteVideo.play();
+                };
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            console.log('📩 Sending offer:', offer);
+            shareSocket.send(JSON.stringify({ 'offer': offer }));
+        } catch (error) {
+            console.error('❌ Error accessing display media:', error);
+            alert('Error accessing display media. Please check your device and permissions.');
+        }
+    };
+
+    shareSocket.onmessage = async event => {
+        const data = JSON.parse(event.data);
+        console.log('📥 Received WebSocket message:', data);
+        if (data.answer) {
+            console.log('✅ Setting remote description with answer:', data.answer);
+            if (peerConnection) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            } else {
+                console.error('❌ No peer connection found!');
+            }
+        } else if (data.offer) {
+            console.log('📩 Received offer:', data.offer);
+            peerConnection = new RTCPeerConnection(config);
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    console.log('📡 Sending ICE candidate:', event.candidate);
+                    shareSocket.send(JSON.stringify({ 'candidate': event.candidate }));
+                }
+            };
+
+            peerConnection.ontrack = event => {
+                console.log('🎬 Received remote stream:', event.streams[0]);
+                remoteVideo.srcObject = event.streams[0];
+            };
+
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+            console.log('✅ Remote description set successfully');
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            localVideo.srcObject = localStream;
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            console.log('📩 Sending answer:', answer);
+            shareSocket.send(JSON.stringify({ 'answer': answer }));
+        } else if (data.candidate) {
+            try {
+                console.log('🔄 Adding ICE candidate:', data.candidate);
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (error) {
+                console.error('❌ Error adding ICE candidate:', error);
+            }
+        }
+    };
+
+    if (peerConnection) {
+        peerConnection.oniceconnectionstatechange = () => {
+            console.log('🔄 ICE Connection State:', peerConnection.iceConnectionState);
+        };
+        peerConnection.onconnectionstatechange = () => {
+            console.log('🔄 Peer Connection State:', peerConnection.connectionState);
+        };
+    }
+    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/{{ user.username }}/{{ recipient.username }}/');
+
+    document.getElementById('send-btn').onclick = sendMessage;
+    document.getElementById('message-input').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    function sendMessage() {
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        console.log('Sending message:', message);
+        chatSocket.send(JSON.stringify({ 'message': message }));
+        messageInput.value = '';
+    }
+    chatSocket.onmessage = event => {
+        const data = JSON.parse(event.data);
+        if (data.error) {
+            console.error('Error from server:', data.error);
+        } else {
+            renderMessage(data);
+        }
+    };
+
+    function renderMessage(data) {
+        const chatMessages = document.getElementById('chat-messages');
+        const newMessage = `
+            <div class="message-container ${data.sender === "{{ user.username }}" ? 'me' : 'other'}" id="message-${data.id}" onclick="handleTap(${data.id})">
+                ${data.sender !== "{{ user.username }}" ? '<div class="avatar" id="avatar-pic"><img src="https://img.icons8.com/?size=100&id=nSR7D8Yb2tjC&format=png&color=000000" alt="AV"></div>' : ''}
+                <div class="message-bubble">
+                <div class="username">${data.sender}</div>
+                ${data.message ? `<div class="message-content">${data.message}</div>` : ''}
+                ${data.file_url ? `<a href="${data.file_url}" download>Download File</a><img src="${data.file_url}" style="max-width: 200px; background-color: white">` : ''}
+                <div class="message-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
+                <div class="options" id="options-${data.id}">
+                    <button onclick="copyMessage('${data.message || ''}')">Copy</button>
+                </div>
+            </div>`;
+        chatMessages.insertAdjacentHTML('beforeend', newMessage);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    chatSocket.onopen = () => {
+        console.log('WebSocket connection established');
+    };
+
+    chatSocket.onclose = event => {
+        console.error('Chat socket closed unexpectedly', event);
+    };
+
+    function handleTap(messageId) {
+        console.log('Tapped message with ID:', messageId);
+        const options = document.getElementById(`options-${messageId}`);
+        if (options) {
+            const currentDisplay = window.getComputedStyle(options).display;
+            if (currentDisplay === 'none' || currentDisplay === '') {
+                options.style.display = 'block';
+            } else {
+                options.style.display = 'none';
+            }
+        } else {
+            console.error(`Options element with ID options-${messageId} not found.`);
+        }
+    }
+
+    function copyMessage(messageContent) {
+        console.log('Copying message:', messageContent);
+        navigator.clipboard.writeText(messageContent).then(() => {
+            console.log('Message copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy message:', err);
+        });
+    }
+
+
+    </script>
+</body>
+</html>

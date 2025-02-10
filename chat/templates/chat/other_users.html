@@ -1,0 +1,70 @@
+{% load static %}
+<html>
+<head>
+    <title>Chat with Superusers</title>
+    <style>
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 15px;
+            background-color: #4caf50;
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .user-list {
+            margin: 0;
+            gap: 1rem;
+            padding: 0;
+            display: flex;
+            list-style: none;
+            align-items: center;
+            flex-direction: column;
+        }
+        .user-list li {
+            width: 80%;
+            text-align: center;
+            color: black;
+            border-radius: 3rem;
+            background: #f0f0f0;
+            padding: 1.1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .user-list li:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="chat-header">Chat</header>
+    <div class="user-list">
+        <ul id="userList">
+            {% for user in users %}
+                <li onclick="startChat('{{ user.username }}')">
+
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+    function startChat(username) {
+        window.location.href = '/chat/' + username + '/';
+    }
+</script>
+</body>
+</html>

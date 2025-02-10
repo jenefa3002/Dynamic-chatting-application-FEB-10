@@ -1,0 +1,164 @@
+{% load static %}
+<html>
+<head>
+    <title>User List</title>
+    <style>
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 15px;
+            background-color: #800080;
+            color: white;
+            text-align: left;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .user-list {
+            margin: 0;
+            gap: 1rem;
+            padding: 0;
+            display: flex;
+            list-style: none;
+            align-items: left;
+            flex-direction: column;
+        }
+        .user-list li {
+            width: 80%;
+            text-align: left;
+            color: black;
+            border-radius: 1rem;
+            background: #f0f0f0;
+            padding: 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .user-list li:hover {
+            background: #e0e0e0;
+        }
+        .user-status {
+            font-size: 20px;
+            margin-left: 5px;
+        }
+        .online{
+            color: #7FFF00;
+            }
+        .offline{
+            color: red;
+            }
+        .online::after {
+           font-family: Times, "Times New Roman", Georgia, serif;
+           color: #8FBC8B;
+           content: "   Online";
+        }
+        .offline::after {
+            font-family: Times, "Times New Roman", Georgia, serif;
+            color: gray;
+            content: "  Offline";
+        }
+        #chat-btn {
+            width: 50px;
+            height: 50px;
+            background-color: #E0B0FF;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #chat-btn:hover {
+            background-color: #D8BFD8;
+        }
+        #chat-btn img {
+            width: 25px;
+            height: 25px;
+        }
+        .badge {
+            background-color: red;
+            color: white;
+             padding: 5px 10px;
+             border-radius: 50%;
+            font-size: 12px;
+            display: none;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="chat-header">{{ user.username }}</header>
+    <ul class="user-list" id="userList">
+        {% for user in users %}
+            <li id="user-{{ user.username }}" onclick="startChat('{{ user.username }}')">
+                <img src="https://img.icons8.com/?size=100&id=13724&format=png&color=000000" alt="chat" id="chat-btn">
+                {{ user.username }}
+                <span id="user-status-{{ user.id }}" class="user-status offline">●</span>
+                <span id="notification-badge-{{ user.username }}" class="badge">0</span>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    var onlineSocket = new WebSocket("ws://" + window.location.host + "/ws/online/");
+    onlineSocket.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        if (data.type === "update_online_users") {
+            updateOnlineUserList(data.online_users);
+        }
+    };
+
+    function updateOnlineUserList(onlineUsers) {
+        document.querySelectorAll(".user-status").forEach((element) => {
+            element.classList.remove("online");
+            element.classList.add("offline");
+        });
+
+        onlineUsers.forEach((user) => {
+            let userElement = document.getElementById("user-status-" + user.user__id);
+            if (userElement) {
+                userElement.classList.remove("offline");
+                userElement.classList.add("online");
+            }
+        });
+    }
+
+    var notificationSocket = new WebSocket("ws://" + window.location.host + "/ws/notifications/");
+    notificationSocket.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+            if (data.type === "unread_count") {
+                updateUnreadCounts(data.unread_counts);
+            }
+    };
+
+    function updateUnreadCounts(unreadCounts) {
+        Object.keys(unreadCounts).forEach(function(sender) {
+            let senderBadge = document.getElementById("notification-badge-" + sender);
+            if (senderBadge) {
+                senderBadge.innerText = unreadCounts[sender];
+                senderBadge.style.display = "inline-block";
+            }
+        });
+    }
+
+    function startChat(username) {
+        console.log("Marking messages as read for:", username);
+        notificationSocket.send(JSON.stringify({ "type": "mark_read", "sender_username": username }));
+        window.location.href = '/chat/' + username + '/';
+    }
+
+</script>
+</body>
+</html>
