@@ -3,102 +3,184 @@
 <head>
     <title>User List</title>
     <style>
-        .container {
-            width: 100%;
-            max-width: 500px;
-            margin: 50px auto;
-            background-color: #ffffff;
-            border-radius: 5px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .chat-header {
-            padding: 15px;
-            background-color: #800080;
-            color: white;
-            text-align: left;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        .user-list {
-            margin: 0;
-            gap: 1rem;
-            padding: 0;
-            display: flex;
-            list-style: none;
-            align-items: left;
-            flex-direction: column;
-        }
-        .user-list li {
-            width: 80%;
-            text-align: left;
-            color: black;
-            border-radius: 1rem;
-            background: #f0f0f0;
-            padding: 1rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-        }
-        .user-list li:hover {
-            background: #e0e0e0;
-        }
-        .user-status {
-            font-size: 20px;
-            margin-left: 5px;
-        }
-        .online{
-            color: #7FFF00;
-            }
-        .offline{
-            color: red;
-            }
-        .online::after {
-           font-family: Times, "Times New Roman", Georgia, serif;
-           color: #8FBC8B;
-           content: "   Online";
-        }
-        .offline::after {
-            font-family: Times, "Times New Roman", Georgia, serif;
-            color: gray;
-            content: "  Offline";
-        }
-        #chat-btn {
-            width: 50px;
-            height: 50px;
-            background-color: #E0B0FF;
-            border: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+/* General Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-        #chat-btn:hover {
-            background-color: #D8BFD8;
-        }
-        #chat-btn img {
-            width: 25px;
-            height: 25px;
-        }
-        .badge {
-            background-color: red;
-            color: white;
-             padding: 5px 10px;
-             border-radius: 50%;
-            font-size: 12px;
-            display: none;
-        }
+/* Adjust container height and make it scrollable */
+.container {
+    width: 90%;
+    max-width: 500px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: relative;
+    height: 80vh; /* Set a fixed height */
+}
 
+/* Ensure the chat header stays at the top */
+.chat-header {
+    padding: 15px;
+    background: linear-gradient(135deg, #800080, #4B0082);
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 600;
+    font-family: Georgia, serif;
+    text-align: left;
+    border-radius: 10px 10px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Make the user list scrollable */
+.user-list {
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: calc(80vh - 60px);
+    overflow-y: auto;
+}
+
+/* Add a smooth scroll effect */
+.user-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.user-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.user-list::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+
+/* User List Item */
+.user-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f9f9f9;
+    padding: 12px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    position: relative;
+}
+
+.user-list li:hover {
+    background: #e0e0e0;
+}
+
+/* User Status (Online / Offline) */
+.user-status {
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+.online {
+    color: #28a745;
+}
+
+.offline {
+    color: red;
+}
+
+.online::after {
+    font-family: 'Poppins', sans-serif;
+    content: "  Online";
+    color: #28a745;
+}
+
+.offline::after {
+    font-family: 'Poppins', sans-serif;
+    content: "  Offline";
+    color: gray;
+}
+
+/* Chat Button */
+#chat-btn {
+    width: 45px;
+    height: 45px;
+    background-color: #D8BFD8;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+#chat-btn:hover {
+    background-color: #BA55D3;
+}
+
+#chat-btn img {
+    width: 22px;
+    height: 22px;
+}
+.badge {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 8px;
+    border-radius: 50%;
+    min-width: 18px;
+    text-align: center;
+    display: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.badge.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
     </style>
 </head>
 <body>
-<div class="container">
-    <header class="chat-header">{{ user.username }}</header>
+<div class="container" id="container">
+    <header class="chat-header">{{ user.username }}</header>P
     <ul class="user-list" id="userList">
         {% for user in users %}
             <li id="user-{{ user.username }}" onclick="startChat('{{ user.username }}')">
@@ -112,13 +194,20 @@
 </div>
 
 <script>
+
     var onlineSocket = new WebSocket("ws://" + window.location.host + "/ws/online/");
     onlineSocket.onmessage = function(event) {
         var data = JSON.parse(event.data);
         if (data.type === "update_online_users") {
             updateOnlineUserList(data.online_users);
         }
+    window.onload = function() {
+    document.getElementById("container").scrollTop = 0;
     };
+    };
+    window.onload = function() {
+    window.scrollTo(0, 0);
+};
 
     function updateOnlineUserList(onlineUsers) {
         document.querySelectorAll(".user-status").forEach((element) => {
@@ -144,13 +233,21 @@
     };
 
     function updateUnreadCounts(unreadCounts) {
-        Object.keys(unreadCounts).forEach(function(sender) {
-            let senderBadge = document.getElementById("notification-badge-" + sender);
-            if (senderBadge) {
-                senderBadge.innerText = unreadCounts[sender];
-                senderBadge.style.display = "inline-block";
-            }
-        });
+    let userList = document.getElementById("userList");
+    let userItems = Array.from(userList.children);
+    let userMap = {};
+    userItems.forEach((item) => {
+        let username = item.id.replace("user-", "");
+        let unreadCount = unreadCounts[username] || 0;
+        let badge = document.getElementById("notification-badge-" + username);
+        if (badge) {
+            badge.innerText = unreadCount;
+            badge.style.display = unreadCount > 0 ? "inline-block" : "none";
+        }
+        userMap[username] = { element: item, unread: unreadCount };
+    });
+    let sortedUsers = Object.values(userMap).sort((a, b) => b.unread - a.unread);
+    sortedUsers.forEach((user) => userList.appendChild(user.element));
     }
 
     function startChat(username) {

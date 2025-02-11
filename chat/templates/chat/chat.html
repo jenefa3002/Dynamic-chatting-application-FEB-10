@@ -44,7 +44,7 @@
         /* Header Section */
         .chat-header {
             padding: 5px;
-            background-color: #800080;
+            background: linear-gradient(135deg, #800080, #4B0082);
             color: white;
             text-align: center;
             font-size: 1.2rem;
@@ -87,8 +87,6 @@
         .message-container.other {
             justify-content: flex-start;
         }
-
-        /* Avatar */
         .avatar {
             width: 35px;
             height: 35px;
@@ -96,8 +94,6 @@
             background-color: #ccc;
             flex-shrink: 0;
         }
-
-        /* Message Bubble */
         .message-bubble {
             max-width: 70%;
             padding: 10px 15px;
@@ -109,7 +105,7 @@
         .message-container.me .message-bubble {
             background-color: #D8BFD8;
             color: black;
-            text-align: left;
+            text-align: right;
         }
 
         .message-container.other .message-bubble {
@@ -118,7 +114,7 @@
             text-align: left;
         }
         .username {
-            font-size: 0.9rem;
+            font-size: 0.5rem;
             font-weight: bold;
             color: #7b7d7d;
         }
@@ -275,16 +271,6 @@
         .offline{
             color: red;
             }
-        .online::after {
-           font-family: Times, "Times New Roman", Georgia, serif;
-           color: #8FBC8B;
-           content: "   Online";
-        }
-        .offline::after {
-            font-family: Times, "Times New Roman", Georgia, serif;
-            color: gray;
-            content: "  Offline";
-        }
 
     </style>
           <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">

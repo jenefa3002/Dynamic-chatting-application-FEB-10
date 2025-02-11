@@ -11,6 +11,8 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from .models import PrivateMessage, UserStatus
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.contrib.auth.models import User
 
 
 def send_message(sender, recipient, message_text):
@@ -50,7 +52,7 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('chat')
+            return redirect('login')
     else:
         form = UserCreationForm()
     return render(request, 'chat/signup.html', {'form': form})
@@ -78,11 +80,7 @@ def save_message(request):
 
 @login_required
 def user_list_view(request):
-    users = User.objects.all()
-    if request.user.is_superuser:
-        users = User.objects.filter(is_superuser=False)
-    else:
-        users = User.objects.filter(is_superuser=True)
+    users = User.objects.exclude(id=request.user.id)
     return render(request, 'chat/users.html', {'users': users})
 
 @login_required
@@ -138,10 +136,6 @@ def fetch_new_messages(request, username):
 @login_required
 def screen_share(request):
     return render(request, 'chat.html')
-
-from django.http import JsonResponse
-from django.contrib.auth.models import User
-from .models import PrivateMessage
 
 @login_required
 def fetch_unread_count(request, username):
